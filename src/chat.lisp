@@ -116,9 +116,10 @@ a single provider item can never splice into the top-level result."
                  (format nil "agent · ~A" (chat-clock (getf item :time))))
            (list :div :class "msg-body" (getf item :text))))
     (:tool
-     (list :details :class "msg tool"
-           (list :summary (getf item :text))
-           (list :pre :class "msg-detail" (getf item :detail))))))
+       (list :details :class "msg tool"
+             :data-seq (getf item :seq)
+             (list :summary (getf item :text))
+             (list :pre :class "msg-detail" (getf item :detail))))))
 
 (defun thread-bubbles-html (session &optional pending error)
   "Just the transcript content: bubbles, an optional just-sent user

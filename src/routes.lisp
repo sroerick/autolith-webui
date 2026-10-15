@@ -479,16 +479,20 @@
 (defparameter +shell-script+
    "document.body.addEventListener('htmx:beforeSwap', function (evt) {
   var path = evt.detail && evt.detail.pathInfo && evt.detail.pathInfo.requestPath;
-  if (path && path.split('?')[0] === '/chat/messages') {
+  var base = path && path.split('?')[0];
+  if (base === '/chat/messages' || base === '/chat/send') {
     var t = document.getElementById('chat-thread');
     window.__chatOpen = {};
     window.__chatPinned = false;
     if (t) {
       window.__chatPinned = t.scrollHeight - t.scrollTop - t.clientHeight < 60;
-      t.querySelectorAll('details[open] > summary').forEach(function (s) {
-        window.__chatOpen[s.textContent] = true;
+      t.querySelectorAll('details[data-seq][open]').forEach(function (d) {
+        window.__chatOpen[d.dataset.seq] = true;
       });
     }
+  }
+  if (base === '/chat/thread' || base === '/panel/chat') {
+    window.__chatOpen = {};
   }
 });
 document.body.addEventListener('htmx:afterOnLoad', function (evt) {
@@ -500,14 +504,18 @@ document.body.addEventListener('htmx:afterOnLoad', function (evt) {
   });
   var thread = document.getElementById('chat-thread');
   if (!thread) return;
-  if (base === '/chat/messages') {
+  if (base === '/chat/messages' || base === '/chat/send') {
     if (window.__chatOpen) {
-      thread.querySelectorAll('details > summary').forEach(function (s) {
-        if (window.__chatOpen[s.textContent]) s.parentElement.open = true;
+      thread.querySelectorAll('details[data-seq]').forEach(function (d) {
+        if (window.__chatOpen[d.dataset.seq]) d.open = true;
       });
     }
-    if (window.__chatPinned) thread.scrollTop = thread.scrollHeight;
-  } else if (base === '/chat/thread' || base === '/chat/send' || base === '/panel/chat') {
+    if (base === '/chat/messages') {
+      if (window.__chatPinned) thread.scrollTop = thread.scrollHeight;
+    } else {
+      thread.scrollTop = thread.scrollHeight;
+    }
+  } else if (base === '/chat/thread' || base === '/panel/chat') {
     thread.scrollTop = thread.scrollHeight;
   }
 });
