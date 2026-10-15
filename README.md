@@ -1,6 +1,6 @@
 # autolith-webui
 
-A native Common Lisp web console for Autolith. htmx
+A native Common Lisp web console for [Autolith](https://autolith.rocks). htmx
 frontend, `hx-encoding="multipart/form-data"` uploads, in-image Lisp REPL,
 and headless `autolith run-job` integration. No web frameworks: the HTTP
 server is hand-rolled on usocket + bordeaux-threads + flexi-streams.
