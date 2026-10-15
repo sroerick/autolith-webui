@@ -39,7 +39,7 @@ server is hand-rolled on usocket + bordeaux-threads + flexi-streams.
 git clone <this repo> ~/autolith-webui && cd ~/autolith-webui
 make install-links   # symlink into ~/quicklisp/local-projects
 make build           # dumps bin/autolith-webui (SBCL core, ~13 MB)
-./bin/autolith-webui # http://127.0.0.1:8090
+./bin/autolith-webui # http://127.0.0.1:8078
 ```
 
 Run from source instead of a core dump:
