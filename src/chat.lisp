@@ -120,9 +120,10 @@ a single provider item can never splice into the top-level result."
            (list :summary (getf item :text))
            (list :pre :class "msg-detail" (getf item :detail))))))
 
-(defun thread-html (session &optional pending error)
-  "The polling transcript fragment: div#chat-thread with bubbles, an
-optional just-sent user bubble, and an optional error note."
+(defun thread-bubbles-html (session &optional pending error)
+  "Just the transcript content: bubbles, an optional just-sent user
+bubble, and an optional error note. Swapped INTO the persistent
+#chat-thread container, so its scroll position survives polling."
   (let* ((items (chat-items session))
          (last-user (and items
                          (eq (getf (car (last items)) :kind) :user)
@@ -131,15 +132,22 @@ optional just-sent user bubble, and an optional error note."
                     (append items
                             (list (list :kind :user :time nil :text pending)))
                     items)))
-    (list :div :id "chat-thread"
-          :hx-get (format nil "/chat/messages?session=~A" session)
-          :hx-trigger "every 3s" :hx-swap "outerHTML"
-          (when error (list :div :class "msg error" error))
-          (mapcar #'chat-bubble items)
-          (unless items
-            (list :p :class "muted"
-                  "No transcript events yet (or the conversation log is
+    (list
+     (when error (list :div :class "msg error" error))
+     (mapcar #'chat-bubble items)
+     (unless items
+       (list :p :class "muted"
+             "No transcript events yet (or the conversation log is
 unavailable). Messages you send still queue.")))))
+
+(defun thread-html (session &optional pending error)
+  "The #chat-thread scroll container carrying the polling attributes,
+wrapping the transcript content (swapped via innerHTML so the
+container - and its scroll position - persists)."
+  (list :div :id "chat-thread"
+        :hx-get (format nil "/chat/messages?session=~A" session)
+        :hx-trigger "every 3s" :hx-swap "innerHTML"
+        (thread-bubbles-html session pending error)))
 
 (defun chat-threads-html (&optional selected)
   "The polling session sidebar."
@@ -174,7 +182,7 @@ unavailable). Messages you send still queue.")))))
         :method "post" :action "/chat/send"
         :enctype "multipart/form-data"
         :hx-post "/chat/send" :hx-encoding "multipart/form-data"
-        :hx-target "#chat-thread" :hx-swap "outerHTML"
+          :hx-target "#chat-thread" :hx-swap "innerHTML"
         (list :input :type "hidden" :name "session" :value session)
         (list :textarea :name "message" :required "required"
               :placeholder "message the session...")

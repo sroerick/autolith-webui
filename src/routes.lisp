@@ -477,7 +477,21 @@
 ;;; --- page shell ---
 
 (defparameter +shell-script+
-   "document.body.addEventListener('htmx:afterOnLoad', function (evt) {
+   "document.body.addEventListener('htmx:beforeSwap', function (evt) {
+  var path = evt.detail && evt.detail.pathInfo && evt.detail.pathInfo.requestPath;
+  if (path && path.split('?')[0] === '/chat/messages') {
+    var t = document.getElementById('chat-thread');
+    window.__chatOpen = {};
+    window.__chatPinned = false;
+    if (t) {
+      window.__chatPinned = t.scrollHeight - t.scrollTop - t.clientHeight < 60;
+      t.querySelectorAll('details[open] > summary').forEach(function (s) {
+        window.__chatOpen[s.textContent] = true;
+      });
+    }
+  }
+});
+document.body.addEventListener('htmx:afterOnLoad', function (evt) {
   var path = evt.detail && evt.detail.pathInfo && evt.detail.pathInfo.requestPath;
   if (!path) return;
   var base = path.split('?')[0];
@@ -485,12 +499,26 @@
     b.classList.toggle('active', b.getAttribute('hx-get') === base);
   });
   var thread = document.getElementById('chat-thread');
-  if (thread) thread.scrollTop = thread.scrollHeight;
+  if (!thread) return;
+  if (base === '/chat/messages') {
+    if (window.__chatOpen) {
+      thread.querySelectorAll('details > summary').forEach(function (s) {
+        if (window.__chatOpen[s.textContent]) s.parentElement.open = true;
+      });
+    }
+    if (window.__chatPinned) thread.scrollTop = thread.scrollHeight;
+  } else if (base === '/chat/thread' || base === '/chat/send' || base === '/panel/chat') {
+    thread.scrollTop = thread.scrollHeight;
+  }
 });
 document.body.addEventListener('htmx:afterRequest', function (evt) {
   var elt = evt.detail && evt.detail.elt;
   if (evt.detail.successful && elt && elt.tagName === 'FORM' && elt.reset) elt.reset();
-});")
+});
+(function () {
+  var t = document.getElementById('chat-thread');
+  if (t) t.scrollTop = t.scrollHeight;
+})();")
 
 (defun nav-tabs (active)
   (loop for (key label) in
@@ -677,24 +705,23 @@ document.body.addEventListener('htmx:afterRequest', function (evt) {
     (defroute :get "^/chat/messages$" (request)
       (let ((session (param request "session")))
         (if (valid-session-id-p session)
-            (html-response (render (thread-html session)))
-            (html-response (render (list :div :id "chat-thread"))))))
+            (html-response (render (thread-bubbles-html session)))
+              (html-response ""))))
 
     (defroute :post "^/chat/send$" (request)
       (let* ((session (param request "session"))
              (message (trim (param request "message"))))
-        (cond ((not (valid-session-id-p session))
-               (html-response (render (list :div :id "chat-thread"
-                                            (list :div :class "msg error"
-                                                  "Unknown session.")))))
+          (cond ((not (valid-session-id-p session))
+                 (html-response (render (list :div :class "msg error"
+                                              "Unknown session."))))
               ((blank-p message)
-               (html-response (render (thread-html session))))
+                 (html-response (render (thread-bubbles-html session))))
               (t
                (multiple-value-bind (out err code)
                    (localgroup-tell session message)
                  (declare (ignore out))
                  (html-response
-                  (render (thread-html session message
+                    (render (thread-bubbles-html session message
                                        (unless (eql code 0)
                                          (format nil "tell failed: ~A"
                                                  (or (trim err)
