@@ -1,0 +1,6 @@
+bin/autolith-webui
+dist/
+*.fasl
+*.lx64fsl
+*.core
+*~
