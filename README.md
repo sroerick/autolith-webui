@@ -1,13 +1,13 @@
 # autolith-webui
 
-A native Common Lisp web console for [Autolith](https://github.com/). htmx
+A native Common Lisp web console for Autolith. htmx
 frontend, `hx-encoding="multipart/form-data"` uploads, in-image Lisp REPL,
 and headless `autolith run-job` integration. No web frameworks: the HTTP
 server is hand-rolled on usocket + bordeaux-threads + flexi-streams.
 
 ```
   AUTOLITH::CONSOLE
-  [overview] [agent] [repl] [files] [state] [sessions]
+  [overview] [chat] [agent] [repl] [files] [state] [sessions]
 ```
 
 ## Features
@@ -19,6 +19,11 @@ server is hand-rolled on usocket + bordeaux-threads + flexi-streams.
   workspace, and an optional file attachment. Jobs run in background
   threads, poll every 3 s, and show status, result, usage tokens, and
   process output. Kill button for running jobs.
+- **Chat** — per-session chat with detached sessions: a sidebar built from
+  `autolith localgroup status`, a transcript rendered from the session's
+  conversation event log (user/agent bubbles, collapsible tool calls), 3 s
+  polling with scroll position and open-fold state preserved, and a
+  composer that queues messages via `autolith localgroup tell`.
 - **REPL** — evaluates in the server's Lisp image, package `WEBUI-USER`
   (uses `COMMON-LISP` and `UIOP`). `*READ-EVAL*` disabled, 20 s timeout
   (SBCL), output captured, history kept, package reset button.
@@ -36,7 +41,7 @@ server is hand-rolled on usocket + bordeaux-threads + flexi-streams.
 ## Quickstart
 
 ```sh
-git clone <this repo> ~/autolith-webui && cd ~/autolith-webui
+git clone https://github.com/sroerick/autolith-webui ~/autolith-webui && cd ~/autolith-webui
 make install-links   # symlink into ~/quicklisp/local-projects
 make build           # dumps bin/autolith-webui (SBCL core, ~13 MB)
 ./bin/autolith-webui # http://127.0.0.1:8078
@@ -74,8 +79,9 @@ make smoke
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/` | Shell page (overview inlined) |
-| GET | `/panel/{overview,agent,repl,files,state,sessions}` | Panel fragments; without an `HX-Request` header a full page is rendered |
+| GET | `/panel/{overview,agent,chat,repl,files,state,sessions}` | Panel fragments; without an `HX-Request` header a full page is rendered |
 | POST | `/agent/run` · `/agent/kill` · GET `/agent/jobs` | Headless job lifecycle |
+| GET | `/chat/threads` · `/chat/thread` · `/chat/messages` · POST `/chat/send` | Session chat: sidebar, transcript fragments, multipart send |
 | POST | `/repl` · `/repl/reset` | In-image evaluation |
 | POST | `/files/upload` · `/files/delete` · GET `/files/download` | Multipart files |
 | GET | `/state/body` · `/sessions/body` | Polled state and session tables |
