@@ -477,12 +477,15 @@
 ;;; --- page shell ---
 
 (defparameter +shell-script+
-  "document.body.addEventListener('htmx:afterOnLoad', function (evt) {
+   "document.body.addEventListener('htmx:afterOnLoad', function (evt) {
   var path = evt.detail && evt.detail.pathInfo && evt.detail.pathInfo.requestPath;
   if (!path) return;
+  var base = path.split('?')[0];
   document.querySelectorAll('nav button').forEach(function (b) {
-    b.classList.toggle('active', b.getAttribute('hx-get') === path);
+    b.classList.toggle('active', b.getAttribute('hx-get') === base);
   });
+  var thread = document.getElementById('chat-thread');
+  if (thread) thread.scrollTop = thread.scrollHeight;
 });
 document.body.addEventListener('htmx:afterRequest', function (evt) {
   var elt = evt.detail && evt.detail.elt;
@@ -491,8 +494,8 @@ document.body.addEventListener('htmx:afterRequest', function (evt) {
 
 (defun nav-tabs (active)
   (loop for (key label) in
-        '((:overview "overview") (:agent "agent") (:repl "repl")
-          (:files "files") (:state "state") (:sessions "sessions"))
+          '((:overview "overview") (:chat "chat") (:agent "agent") (:repl "repl")
+            (:files "files") (:state "state") (:sessions "sessions"))
         collect (list :button
                       :class (if (eq key active) "tab active" "tab")
                       :hx-get (format nil "/panel/~(~A~)" key)
@@ -543,12 +546,14 @@ document.body.addEventListener('htmx:afterRequest', function (evt) {
     (declare (ignore request))
     (html-response (page-shell :initial :overview)))
 
-  (defroute :get "^/panel/(overview|agent|repl|files|state|sessions)$" (request panel)
-    (let* ((key (panel-key panel))
-           (html (panel-html key)))
-      (if (header-value request "hx-request")
-          (html-response (render html))
-          (html-response (page-shell :initial key :initial-html html)))))
+    (defroute :get "^/panel/(overview|agent|repl|files|state|sessions|chat)$" (request panel)
+      (let* ((key (panel-key panel))
+             (html (if (eq key :chat)
+                       (panel-chat-html (param request "session"))
+                       (panel-html key))))
+        (if (header-value request "hx-request")
+            (html-response (render html))
+            (html-response (page-shell :initial key :initial-html html)))))
 
   (defroute :post "^/agent/run$" (request)
     (let ((task (param request "task"))
@@ -654,8 +659,45 @@ document.body.addEventListener('htmx:afterRequest', function (evt) {
     (declare (ignore request))
     (serve-static name))
 
-  (defroute :get "^/favicon\\.ico$" (request)
-    (declare (ignore request))
-    (serve-static "favicon.svg"))
+    (defroute :get "^/favicon\\.ico$" (request)
+      (declare (ignore request))
+      (serve-static "favicon.svg"))
 
-  (values))
+    (defroute :get "^/chat/threads$" (request)
+      (html-response (render (chat-threads-html (param request "session")))))
+
+    (defroute :get "^/chat/thread$" (request)
+      (let ((session (param request "session")))
+        (if (valid-session-id-p session)
+            (html-response (render (list (thread-html session)
+                                         (chat-composer-html session))))
+            (html-response (render (list :p :class "muted"
+                                         "Unknown session."))))))
+
+    (defroute :get "^/chat/messages$" (request)
+      (let ((session (param request "session")))
+        (if (valid-session-id-p session)
+            (html-response (render (thread-html session)))
+            (html-response (render (list :div :id "chat-thread"))))))
+
+    (defroute :post "^/chat/send$" (request)
+      (let* ((session (param request "session"))
+             (message (trim (param request "message"))))
+        (cond ((not (valid-session-id-p session))
+               (html-response (render (list :div :id "chat-thread"
+                                            (list :div :class "msg error"
+                                                  "Unknown session.")))))
+              ((blank-p message)
+               (html-response (render (thread-html session))))
+              (t
+               (multiple-value-bind (out err code)
+                   (localgroup-tell session message)
+                 (declare (ignore out))
+                 (html-response
+                  (render (thread-html session message
+                                       (unless (eql code 0)
+                                         (format nil "tell failed: ~A"
+                                                 (or (trim err)
+                                                     "unknown error")))))))))))
+
+    (values))

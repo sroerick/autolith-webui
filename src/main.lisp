@@ -95,5 +95,23 @@ line2 \"quoted\""
   (assert (constant-time-equal "secret" "secret"))
   (assert (not (constant-time-equal "secret" "Secret")))
   (assert (not (constant-time-equal "secret" "secretX")))
-  (format t "~&all self-tests passed.~%")
-  t)
+    (let ((items (chat-items-from-forms
+                  (list (list :message :seq 1 :time 4001012146 :role :user
+                              :content "hi there")
+                        (list :provider-item :seq 2 :time 4001012160 :wire-json
+                              "{\"type\":\"message\",\"role\":\"assistant\",\"content\":[{\"type\":\"output_text\",\"text\":\"hello\"}]}")
+                        (list :provider-item :seq 3 :time 4001012161 :wire-json
+                              "{\"type\":\"function_call\",\"call_id\":\"c1\",\"name\":\"files\",\"arguments\":\"{}\",\"namespace\":\"search\"}")
+                        (list :provider-item :seq 4 :time 4001012162 :wire-json
+                              "{\"type\":\"reasoning_content\",\"content\":\"thinking\"}")
+                        (list :provider-item :seq 5 :time 4001012163 :wire-json
+                              "not json")))))
+      (assert (= 3 (length items)))
+      (assert (eq :user (getf (first items) :kind)))
+      (assert (equal "hi there" (getf (first items) :text)))
+      (assert (eq :agent (getf (second items) :kind)))
+      (assert (equal "hello" (getf (second items) :text)))
+      (assert (eq :tool (getf (third items) :kind)))
+        (assert (equal "files · search" (getf (third items) :text)))
+    (format t "~&all self-tests passed.~%")
+    t))

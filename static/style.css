@@ -230,3 +230,25 @@ details[open] summary { margin-bottom: 6px; }
   header { flex-wrap: wrap; }
   .meta { display: none; }
 }
+
+/* chat */
+.chat-grid { display: grid; grid-template-columns: 17rem minmax(0, 1fr); gap: 14px; align-items: start; }
+#chat-threads { border: 1px solid var(--border); border-radius: 8px; background: var(--panel); max-height: 72vh; overflow-y: auto; padding: 4px; }
+.chat-thread-btn { display: block; width: 100%; text-align: left; background: none; border: 0; border-radius: 6px; padding: 8px 10px; color: var(--text); font: inherit; cursor: pointer; }
+.chat-thread-btn:hover { background: var(--panel-2); }
+.chat-thread-btn.active { background: var(--panel-2); outline: 1px solid var(--accent); }
+.chat-thread-btn .badge { float: right; }
+#chat-main { border: 1px solid var(--border); border-radius: 8px; background: var(--panel); padding: 14px; }
+#chat-thread { display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; padding: 4px 2px; margin-bottom: 10px; }
+.msg { max-width: 82%; border-radius: 10px; padding: 7px 10px; border: 1px solid var(--border); background: var(--panel-2); }
+.msg.user { align-self: flex-end; background: var(--accent); border-color: var(--accent); color: #10141b; }
+.msg.user .msg-meta { color: rgba(16, 20, 27, 0.7); }
+.msg.agent { align-self: flex-start; }
+.msg.error { align-self: center; background: transparent; border-color: var(--err); color: var(--err); }
+.msg-meta { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.msg-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.tool { align-self: center; max-width: 90%; background: transparent; }
+.msg.tool summary { cursor: pointer; color: var(--info); font-family: var(--mono); font-size: 12px; }
+.msg-detail { font-family: var(--mono); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0 0; }
+.composer { display: flex; gap: 8px; align-items: flex-end; }
+.composer textarea { flex: 1; min-height: 44px; max-height: 30vh; resize: vertical; background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font: inherit; }
