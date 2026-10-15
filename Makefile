@@ -26,6 +26,7 @@ package: build
 	  --exclude=autolith-webui/.git \
 	  --exclude=autolith-webui/bin/autolith-webui \
 	  --exclude=autolith-webui/dist \
+	  --exclude='*.fasl' --exclude='*.lx64fsl' --exclude='*.core' \
 	  autolith-webui; \
 	echo "packaged dist/autolith-webui-$$version.tar.gz"
 
