@@ -1,5 +1,8 @@
 # autolith-webui
 
+<img width="1840" height="848" alt="screenshot-2026-10-14_23-00-01" src="https://github.com/user-attachments/assets/46a0e929-1902-432e-9025-8f57601fc31c" />
+
+
 A native Common Lisp web console for [Autolith](https://autolith.rocks). htmx
 frontend, `hx-encoding="multipart/form-data"` uploads, in-image Lisp REPL,
 and headless `autolith run-job` integration. No web frameworks: the HTTP
