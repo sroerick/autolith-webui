@@ -185,10 +185,12 @@
    (list :h2 "Agent jobs")
    (list :p :class "muted"
          "Each submission runs one contracted headless child-agent job via `autolith run-job`. The result contract is a plain string.")
-   (list :form :class "card stack"
-         :hx-post "/agent/run"
-         :hx-encoding "multipart/form-data"
-         :hx-target "#job-list" :hx-swap "innerHTML"
+     (list :form :class "card stack"
+           :method "post" :action "/agent/run"
+           :enctype "multipart/form-data"
+           :hx-post "/agent/run"
+           :hx-encoding "multipart/form-data"
+           :hx-target "#job-list" :hx-swap "innerHTML"
          (list :label "Task")
          (list :textarea :name "task" :required "required"
                :placeholder "Describe the job for the child agent...")
@@ -249,8 +251,9 @@
    (list :h2 "REPL")
    (list :p :class "muted"
          "Evaluates in this server's Lisp image, package WEBUI-USER (uses COMMON-LISP and UIOP). *READ-EVAL* disabled, 20s timeout, output captured.")
-   (list :form :class "card stack"
-         :hx-post "/repl" :hx-target "#repl-out" :hx-swap "innerHTML"
+     (list :form :class "card stack"
+           :method "post" :action "/repl"
+           :hx-post "/repl" :hx-target "#repl-out" :hx-swap "innerHTML"
          (list :textarea :name "expr" :required "required" :spellcheck "false"
                :class "mono" :placeholder "(+ 1 2)")
          (list :div :class "row"
@@ -295,10 +298,12 @@
    (list :p :class "muted"
          (format nil "Uploads land in ~A (hx-encoding=\"multipart/form-data\")."
                  (uploads-directory)))
-   (list :form :class "card row"
-         :hx-post "/files/upload"
-         :hx-encoding "multipart/form-data"
-         :hx-target "#file-table" :hx-swap "innerHTML"
+     (list :form :class "card row"
+           :method "post" :action "/files/upload"
+           :enctype "multipart/form-data"
+           :hx-post "/files/upload"
+           :hx-encoding "multipart/form-data"
+           :hx-target "#file-table" :hx-swap "innerHTML"
          (list :input :type "file" :name "file" :multiple "multiple")
          (list :button :type "submit" "Upload"
                (list :span :class "htmx-indicator spinner")))
@@ -455,8 +460,9 @@
    (list :div :id "sessions-body"
          :hx-get "/sessions/body" :hx-trigger "every 12s"
          (sessions-body-html))
-   (list :form :class "card stack"
-         :hx-post "/sessions/tell" :hx-target "#sessions-note" :hx-swap "innerHTML"
+     (list :form :class "card stack"
+           :method "post" :action "/sessions/tell"
+           :hx-post "/sessions/tell" :hx-target "#sessions-note" :hx-swap "innerHTML"
          (list :div :class "row"
                (list :label "Session"
                      (list :input :name "session" :required "required"

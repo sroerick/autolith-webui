@@ -73,16 +73,19 @@ the source tree is not present next to the binary.")
   (ensure-directory (jobs-directory)))
 
 (defun static-content-type (name)
+  "MIME type for NAME by extension. PATHNAME-TYPE returns a string, so the
+match must be on strings: an eql CASE against keyword clauses never fires
+and every asset falls through to application/octet-stream (which, with
+X-Content-Type-Options: nosniff, makes browsers refuse to run scripts)."
   (let ((type (ignore-errors (string-upcase (pathname-type name)))))
-    (case type
-      (:css "text/css; charset=utf-8")
-      (:js "text/javascript; charset=utf-8")
-      (:svg "image/svg+xml")
-      (:png "image/png")
-      (:ico "image/x-icon")
-      (:html "text/html; charset=utf-8")
-      (:txt "text/plain; charset=utf-8")
-      (t "application/octet-stream"))))
+    (cond ((equal type "CSS") "text/css; charset=utf-8")
+          ((equal type "JS") "text/javascript; charset=utf-8")
+          ((equal type "SVG") "image/svg+xml")
+          ((equal type "PNG") "image/png")
+          ((equal type "ICO") "image/x-icon")
+          ((equal type "HTML") "text/html; charset=utf-8")
+          ((equal type "TXT") "text/plain; charset=utf-8")
+          (t "application/octet-stream"))))
 
 (defun warm-static-cache ()
   "Cache static assets into the image so the dumped executable can serve them
